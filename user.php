@@ -1,3 +1,20 @@
+<?php
+
+session_start();
+ 
+    // Check if the user is logged in, if not then redirect him to login page
+    if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
+        header("location: index.php");
+        exit;
+    }
+
+    // Include config file
+    require_once "config/connect.php";
+    $database = new Database();
+    $db = $database->getConn();
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
