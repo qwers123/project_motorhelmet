@@ -4,12 +4,14 @@ session_start();
  
 // Check if the user is already logged in, if yes then redirect him to welcome page
 if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
-    header("location: user.html");
+    header("location: user.php");
     exit;
 }
  
 // Include config file
-require_once "config/connect.php";
+//require_once "config/connect.php";
+include_once 'config/connect.php';
+include_once 'class/stat_user.php';
 
 $database = new Database();
 $db = $database->getConn();
@@ -37,10 +39,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     
     // Validate credentials
     if(empty($username_err) && empty($password_err)){
+
+        $user_item = new user_connect($db);
+        $stmt = $user_item -> getUser(trim($_POST["username"]));
         // Prepare a select statement
         $sql = "SELECT * FROM user WHERE un = :username";
         
-        if($stmt = $db->prepare($sql)){
+        //if($stmt = $db->prepare($sql)){
+        if($stmt) {
             // Bind variables to the prepared statement as parameters
             $stmt->bindParam(":username", $param_username, PDO::PARAM_STR);
             
@@ -55,7 +61,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                         $id = $row["id"];
                         $username = $row["un"];
                         $pw = $row["pw"];
-                        $login_err = "id: " . $id;
+                        $cp = $row["cp"];
+                        $login_err = "Invalid Password!";
                         
                         if($password == $pw){
                             // Password is correct, so start a new session
@@ -64,10 +71,11 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                             // Store data in session variables
                             $_SESSION["loggedin"] = true;
                             $_SESSION["id"] = $id;
-                            $_SESSION["username"] = $username;                            
+                            $_SESSION["username"] = $username;
+                            $_SESSION["cp"] = $cp;                           
                             
                             // Redirect user to welcome page
-                            header("location: user.html");
+                            header("location: user.php");
                         } else{
                             // Password is not valid, display a generic error message
                             //$login_err = "Invalid username or password.";
@@ -104,12 +112,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
         <!-- Core theme CSS (includes Bootstrap)-->
         <link href="css/styles.css" rel="stylesheet" />
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
         <script src="js/scripts.js"></script>
 
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- JQuery -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         
-        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
         <!--
@@ -264,7 +277,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                         <div class="modal-header">				
                             <h4 class="modal-title">Login</h4>
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="close" aria-hidden="true">&times;</button>
                         </div>
                         <div class="modal-body">				
                             <div class="form-group">

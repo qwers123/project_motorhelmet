@@ -31,9 +31,9 @@
 
         }
 
-        public function getUser($db_un, $db_pw) {
+        public function getUser($db_un) {
             try {
-                $sqlQuery = "SELECT * FROM ". $this->db_table ." WHERE un = '". $db_un . "' AND pw = '" . $db_pw ."'"; 
+                $sqlQuery = "SELECT * FROM ". $this->db_table ." WHERE un = '". $db_un . "'"; 
                 
                 $stmt = $this -> conn -> prepare($sqlQuery);
                 if($stmt -> execute()) {
