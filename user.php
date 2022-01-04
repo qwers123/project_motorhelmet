@@ -137,10 +137,36 @@ session_start();
                         
                         //echo "\n try \n";
 
+                        
+                        $dnt = $jo["body"][0]["dnt"];
                         $motor = $jo["body"][0]["motor"];
                         $move = $jo["body"][0]["move"];
-                        $dnt = $jo["body"][0]["dnt"];
 
+                        date_default_timezone_set('Asia/Manila');
+                        $date = new DateTime("now");
+                        $new_dnt = New DateTime($dnt);
+                        /*
+                        echo "new time: ";
+                        echo $date->format('G:ia');
+                        echo "\n";
+                        echo "time from dnt: ";
+                        echo $new_dnt->format('G:ia');
+                        echo "\n";
+                        */
+                        $time_diff = $date->diff($new_dnt);
+                        $mins = $time_diff->days * 24 * 60;
+                        $mins += $time_diff->h * 60;
+                        $mins += $time_diff-> i;
+
+                        if ($mins > 5) {
+                            $motor = "DISCONNECTED";
+                            $move = "DISCONNECTED";
+                        }
+                        
+                        
+
+                        //echo $mins . " Minutes.";
+                        
                         switch (json_last_error()) {
                             case JSON_ERROR_NONE:
 
@@ -213,6 +239,21 @@ session_start();
                 echo $out2;
             ?>
         </div>
+        <div id="dom-move" style="display: none">
+            <?php
+                echo $move;
+            ?> 
+        </div>
+        <div id="dom-motor" style="display: none">
+            <?php
+                echo $motor;
+            ?> 
+        </div>
+        <div id="dom-total-time" style="display: none">
+            <?php
+                echo $mins;
+            ?> 
+        </div>
         
 
         <script>
@@ -223,10 +264,25 @@ session_start();
             var val_lat = parseFloat(var_lat.textContent);
             var var_lng = document.getElementById("dom-lng");
             var val_lng = parseFloat(var_lng.textContent);
+            var var_motor = document.getElementById("dom-motor").textContent;
+            var val_motor = var_motor.replace(/\s/g, '');
+            var var_move = document.getElementById("dom-move").textContent;
+            var val_move = var_move.replace(/\s/g, '');
+            var var_total_time = document.getElementById("dom-total-time");
+            var val_total_time = parseFloat(var_total_time.textContent);
+
             console.log("lat");
             console.log(val_lat);
             console.log("lng");
             console.log(val_lng);
+            console.log("motor");
+            console.log(val_motor);
+            console.log("move");
+            console.log(val_move);
+            console.log("total time");
+            console.log(val_total_time);
+            
+            
             /*
             
             async function get_latlng() {
@@ -276,17 +332,64 @@ session_start();
             if (val_lat=="") {
                 val_lat = 13.771041628364877;
                 val_lng = 121.0646232998532;
+                
             }
 
-            //sample = 13.877722334296376, 121.2144993815142;
-            //var loc = 13.771041628364877, 121.0646232998532;
-            
-            var sti_bat = {lat: val_lat, lng: val_lng};
             function myMap() {
+                var coordinates = {
+                    lat: val_lat,
+                    lng: val_lng
+                };
+                
                 var mapProp= new google.maps.Map(document.getElementById("googleMap"), {
-                    zoom: 15,
-                    center: sti_bat,
+                    zoom: 20,
+                    center: coordinates,
                 });
+
+               
+                
+                if(val_motor == "ON" && val_move == "ON") {
+
+                    var marker_moveOn_motorOn = new google.maps.Marker({
+                        position: coordinates,
+                        map: mapProp,
+                        icon: {
+                            url: "http://maps.google.com/mapfiles/ms/micons/motorcycling.png",
+                            labelOrigin: new google.maps.Point(75, 32),
+                            size: new google.maps.Size(32, 32),
+                            anchor: new google.maps.Point(16, 32)
+                        }
+                    });
+                    
+                } else if(val_motor == "OFF" && val_move == "ON") {
+                    var marker_moveOn_motorOff = new google.maps.Marker({
+                        position: coordinates,
+                        map: mapProp,
+                        icon: {
+                            url: "http://maps.google.com/mapfiles/kml/paddle/stop-lv.png",
+                            labelOrigin: new google.maps.Point(75, 32),
+                            size: new google.maps.Size(32, 32),
+                            anchor: new google.maps.Point(16, 32)
+                        }
+                    });
+                } else {
+                    var marker_not_connected = new google.maps.Marker({
+                            position: coordinates,
+                            map: mapProp,
+                            icon: {
+                                url: "http://maps.google.com/mapfiles/kml/pal3/icon34.png",
+                                labelOrigin: new google.maps.Point(75, 32),
+                                size: new google.maps.Size(32, 32),
+                                anchor: new google.maps.Point(16, 32)
+                            },
+                            label: {
+                                text: "DISCONNECTED",
+                                color: "#C70E20",
+                                fontWeight: "bold"
+                            }
+                        });
+                }
+                
             }
             </script>
         <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwQBLkpYv8jhjtshFbSBHpW_jznoMPgxQ&callback=myMap"></script>
